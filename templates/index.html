@@ -1,0 +1,185 @@
+<!Doctype html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <!-- 구글폰트 -->
+    <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+<!--    <link rel="stylesheet" href="static/style.css">-->
+
+    <title>나홀로 메모장</title>
+
+    <!-- style -->
+    <style>
+        * {
+            font-family: "Stylish", sans-serif;
+        }
+
+        .wrap {
+            width: 900px;
+            margin: auto;
+        }
+
+        h2{
+            font-size:20px;
+        }
+        .mod-button{
+            background-color:#93c2c7;
+        }
+        button{
+            border-radius:5px / 5px;
+            color:white;
+            border:0;
+        }
+        .del-button{
+            background-color:#d44a51;
+        }
+        h1>button{
+            background-color:#7c7e8a;
+            margin:5px;
+        }
+        #save{
+            background-color:#24a0ed;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+
+            GetMemos();
+        });
+
+         function save(num) {
+
+            let title = $('#ChangeTitle').val()
+            let text = $('#ChangeText').val()
+
+            $.ajax({
+                type: "POST",
+                url: "/modify",
+                data: {
+                    num_give: num,
+                    title_give: title,
+                    text_give: text
+                },
+                success: function (response) { // 성공하면
+                    alert(response["msg"]);
+                    // console.log(response["msg"])
+                    window.location.reload();
+                }
+            })
+        }
+
+        function deletes(num) {
+             $.ajax({
+                type: "POST",
+                url: "/delete",
+                data: {num_give:num},
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.reload();
+
+                }
+            })
+        }
+
+
+        function postArticle() {
+      let title = $('#input-title').val()
+      let text = $('#input-text').val()
+
+      $.ajax({
+        type: "POST",
+        url: "/save",
+        data: {title_give: title, text_give: text},
+        success: function (response) {
+          alert(response['msg'])
+          window.location.reload()
+        }
+      })
+    }
+
+        function change_memo(num, title, text) {
+      $('#' + num).empty();
+      let tempForm = `<div class="card-body">
+                                <p>
+                                    <input placeholder="제목을 입력하세요" value="${title}" id="ChangeTitle">
+                                </p>
+                                <p>
+                                    <textarea placeholder="내용을 입력하세요" id="ChangeText"
+                                        style="height: 100px">${text}</textarea>
+                                </p>
+                            </div>
+                            <div class="mybtns">
+                                <button onclick="save('${num}')" type="button"
+                                    style="background-color: rgb(107, 193, 214);">저장</button>
+                            </div>`
+      $('#' + num).append(tempForm);
+
+    }
+
+        function GetMemos() {
+            $.ajax({
+                type: "GET",
+                url: "/memo",
+                data: {},
+                success: function (response) {
+                    let memo = response['msg']
+
+                    for (let i = 0; i < memo.length; i++) {
+                        let num = memo[i]['num']
+                        let title = memo[i]['title']
+                        let text = memo[i]['text']
+
+                        let temp_html = ` <div class="card" id="${num}">
+            <form action="" >
+                <h2 name="cardtitle" class="card-title">${title}</h2>
+                <p name="cardtext" class="card-text">${text}</p>
+                <button type="submit" class="mod-button" onclick="change_memo('${num}','${title}','${text}')">수정</button>
+                <button type="button" class="del-button" onclick="deletes('${num}')">삭제</button>
+            </form>
+        </div>`
+                        $('#card-list').append(temp_html)
+
+                    }
+                }
+            })
+        }
+    </script>
+
+</head>
+
+<body>
+<div class="wrap">
+    <div class="jumbotron">
+        <h1><b>나홀로메모장</b><button>ver2.0</button></h1>
+        <form action="">
+            <p><input type="text" placeholder="제목을 입력하세요" id="input-title"></p>
+            <p><textarea type="text" placeholder="내용을 입력하세요" id="input-text"></textarea></p>
+        </form>
+        <p class="lead">
+            <button type="submit" onclick="postArticle()" id="save">저장하기</button>
+        </p>
+    </div>
+    <div id="card-list" class="card-columns"></div>
+
+</div>
+
+
+</body>
+
+</html>

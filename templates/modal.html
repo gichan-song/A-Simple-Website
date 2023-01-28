@@ -1,0 +1,197 @@
+<head>
+
+  <meta charSet="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossOrigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns"
+          crossOrigin="anonymous"></script>
+
+  <title>크래프톤 정글 | 나홀로 메모장</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Jua&amp;display=swap" rel="stylesheet">
+
+  <style type="text/css">
+    * {
+      font-family: 'Jua', sans-serif;
+    }
+
+    .wrap {
+      width: 95%;
+      margin: auto;
+    }
+
+    .mypost {
+      width: 70%;
+    }
+  </style>
+
+  <script>
+    $(document).ready(function () {
+      $("#cards-box").html("");
+      showArticles();
+    });
+
+    function postArticle() {
+      let title = $('#memo-title').val()
+      let content = $('#memo-content').val()
+
+      $.ajax({
+        type: "POST",
+        url: "/memo",
+        data: {title_give: title, content_give: content},
+        success: function (response) {
+          alert(response['msg'])
+          window.location.reload()
+        }
+      })
+    }
+
+    function showArticles() {
+      $('#card-list').empty()
+      $.ajax({
+        type: "GET",
+        url: "/memo",
+        data: {},
+        success: function (response) {
+          let rows = response['memos']
+          for (let i = 0; i < rows.length; i++) {
+            let title = rows[i]['title']
+            let content = rows[i]['content']
+            let num = rows[i]['num']
+            let like = rows[i]['like']
+
+
+            let temp_html = `<div class="card">
+                                            <div class="card-body" id="${num}">
+                                                <a class="card-title">${title}</a>
+                                                <p class="card-text">${content}</p>
+                                                <p class="card-likes">${like}</p>
+                                                <div class="mybtns">
+                                                    <button onclick="change_memo('${num}','${title}','${content}')" type="button" class="btn text-white btn-sm edit-button"
+                                                        style="background-color: rgb(107, 193, 214);">수정</button>
+                                                    <button onclick="delete_memo(${num})" type="button" class="btn text-white btn-sm delete-button"
+                                                        style="background-color: rgb(241, 85, 85);">삭제</button>
+                                                    <button onclick="likeStar(${num})" type="button" class="btn btn-link link-like delete-button">좋아요👍</button>
+                                                </div>
+                                            </div>
+                                        </div>`
+
+            $('#card-list').append(temp_html)
+          }
+
+        }
+      })
+    }
+
+    function delete_memo(num) {
+      $.ajax({
+        type: "POST",
+        url: "/memo/delete",
+        data: {num_give: num},
+        success: function (response) {
+          alert(response["msg"])
+          window.location.reload()
+        }
+      });
+    }
+
+    function change_memo(num, title, content) {
+      $('#' + num).empty()
+      let tempForm = `<div class="card-body">
+                                <div class="form-floating">
+                                    <textarea class="form-control new-title" placeholder="Leave a comment here"
+                                        id="floatingTextarea">${title}</textarea>
+                                </div>
+                                <div class="form-floating">
+                                    <textarea class="form-control new-text" placeholder="Leave a comment here" id="floatingTextarea2"
+                                        style="height: 100px">${content}</textarea>
+                                </div>
+                            </div>
+                            <div class="mybtns">
+                                <button button onclick="save_new(${num})" type="button" class="btn text-white btn-sm save-button"
+                                    style="background-color: rgb(107, 193, 214);">저장</button>
+                            </div>`
+      $('#' + num).append(tempForm);
+
+    }
+
+    function save_new(num) {
+
+      let title = $('#floatingTextarea').val()
+      let content = $('#floatingTextarea2').val()
+
+      $.ajax({
+        type: "POST",
+        url: "/memo/change",
+        data: {num_give: num, title_give: title, content_give: content},
+        success: function (response) {
+          alert(response["msg"])
+          window.location.reload()
+        }
+      })
+    }
+
+    function likeStar(num) {
+      $.ajax({
+        type: "POST",
+        url: "/memo/like",
+        data: {'num_give': num},
+        success: function (response) {
+          if (response['result'] == 'success') {
+            window.location.reload()
+          }
+        }
+      });
+    }
+  </script>
+
+</head>
+
+
+<body>
+    <div class="wrap">
+        <div class="jumbotron">
+            <div id="post-box" class="form-post">
+                <h1 class="display-4">나홀로 메모장<span class="badge bg-secondary">ver2.0</span></h1>
+                <div>
+                    <div class="form-group">
+                        <input id="memo-title" class="form-control" placeholder="제목">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="memo-content" class="form-control" rows="2" placeholder="내용"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" onclick="postArticle()">저장하기</button>
+                </div>
+            </div>
+        </div>
+
+                <div id="card-list" class="row row-cols-3"><div class="card">
+                                            <div class="card-body" id="2">
+                                                <a class="card-title">w</a>
+                                                <p class="card-text">w</p>
+                                                <p class="card-likes">0</p>
+                                                <div class="mybtns">
+                                                    <button onclick="change_memo('2','w','w')" type="button" class="btn text-white btn-sm edit-button" style="background-color: rgb(107, 193, 214);">수정</button>
+                                                    <button onclick="delete_memo(2)" type="button" class="btn text-white btn-sm delete-button" style="background-color: rgb(241, 85, 85);">삭제</button>
+                                                    <button onclick="likeStar(2)" type="button" class="btn btn-link link-like delete-button">좋아요👍</button>
+                                                </div>
+                                            </div>
+                                        </div><div class="card">
+                                            <div class="card-body" id="1">
+                                                <a class="card-title">ㅇㅁㄴㅍㅁㅍㅇㄴ</a>
+                                                <p class="card-text">ㅁㅍㅁㄴㅍㅇㅇㄴ</p>
+                                                <p class="card-likes">0</p>
+                                                <div class="mybtns">
+                                                    <button onclick="change_memo('1','ㅇㅁㄴㅍㅁㅍㅇㄴ','ㅁㅍㅁㄴㅍㅇㅇㄴ')" type="button" class="btn text-white btn-sm edit-button" style="background-color: rgb(107, 193, 214);">수정</button>
+                                                    <button onclick="delete_memo(1)" type="button" class="btn text-white btn-sm delete-button" style="background-color: rgb(241, 85, 85);">삭제</button>
+                                                    <button onclick="likeStar(1)" type="button" class="btn btn-link link-like delete-button">좋아요👍</button>
+                                                </div>
+                                            </div>
+                                        </div></div>
+        </div>
+
+
+<div id="merlinExt-merlinGUI" class="merlinExt merlinGUI"></div><div id="merlinExt-ctrlGMessage" class="merlinExt ctrlGMessage"></div><div id="merlinExt-selectContextBtn" class="merlinExt selectContextBtn"></div></body>
